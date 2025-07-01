@@ -1,0 +1,3 @@
+michaelshih-circle/test-sync-target@main:
+  - source: README.md
+    dest: README.md

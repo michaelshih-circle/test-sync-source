@@ -1,0 +1,29 @@
+name: pipeline
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [ checks_requested ]
+
+env:
+  PR_NUMBER: ${{ github.event.number }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@main
+      - name: Run GitHub File Sync
+        uses: BetaHuhn/repo-file-sync-action@v1
+        with:
+          GH_PAT: "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"
+          CONFIG_PATH: .github/pr-release.yml
+          COMMIT_PREFIX: "(Prefix)" # Prefix for commit message and pull request title
+          COMMIT_BODY: "Commit body" # Commit message body. Will be appended to commit message, separated by two line returns.
+          PR_BODY: "PR body" # Additional content to add in the PR description.
+          ORIGINAL_MESSAGE: true # Use original commit message instead. Only works if the file(s) were changed and the action was triggered by pushing a single commit.
+          COMMIT_AS_PR_TITLE: true # Use first line of the commit message as PR title. Only works if ORIGINAL_MESSAGE is true and working.
+
