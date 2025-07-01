@@ -13,17 +13,37 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@main
-      - name: Run GitHub File Sync
-        uses: BetaHuhn/repo-file-sync-action@v1
-        with:
-          GH_PAT: "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"
-          CONFIG_PATH: .github/pr-release.yml
-          COMMIT_PREFIX: "(Prefix)" # Prefix for commit message and pull request title
-          COMMIT_BODY: "Commit body" # Commit message body. Will be appended to commit message, separated by two line returns.
-          PR_BODY: "PR body" # Additional content to add in the PR description.
-          ORIGINAL_MESSAGE: true # Use original commit message instead. Only works if the file(s) were changed and the action was triggered by pushing a single commit.
-          COMMIT_AS_PR_TITLE: true # Use first line of the commit message as PR title. Only works if ORIGINAL_MESSAGE is true and working.
 
+    steps:
+      - name: Checkout Repo A
+        uses: actions/checkout@v2
+        with:
+          repository: michaelshih-circle/test-sync-source
+          token: "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"
+          path: .
+
+      - name: Checkout Repo B
+        uses: actions/checkout@v2
+        with:
+          repository: michaelshih-circle/test-sync-target
+          token: "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"
+          path: .
+
+      - name: Sync files from A to B
+        run: |
+          EXCLUDE_FILES=("README1.md")
+
+          rsync -av --exclude=${EXCLUDE_FILES[@]} . .
+          
+          cd .
+          git add .
+          git commit -m "Sync files from Repo A" || echo "No changes to commit"
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: 'Your Custom PR Title'  # 自定义 PR 标题
+          body: 'This PR contains synced files from Repo A.'
+          base: main  # 目标分支
+          head: sync-branch-${{ github.sha }}  # 为 PR 创建的新分支
