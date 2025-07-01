@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: wadackel/files-sync-action@v3
+      - uses: fgerthoffert/files-sync-action@v3.6.1
         with:
           github_token: "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"
 
