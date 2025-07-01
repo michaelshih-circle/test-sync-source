@@ -1,0 +1,21 @@
+settings:
+  commit:
+      # defaults to "chore: sync files with `owner/repo`"
+      format: '<%- prefix %>: <%- subject %>'
+      prefix: 'release'
+      subject: 'version 1.0.0'
+  pull_request:
+    force: true
+    labels:
+      - 'files-sync'
+    title: 'Release PR title'
+    body: 'body'
+
+patterns:
+  - files:
+      - from: .
+        to: .
+        exclude:
+          - README1.md
+    repositories:
+      - michaelshih-circle/test-sync-target@main
