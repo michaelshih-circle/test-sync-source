@@ -1,9 +1,4 @@
 settings:
-  commit:
-      # defaults to "chore: sync files with `owner/repo`"
-      format: '<%- prefix %>: <%- subject %>'
-      prefix: 'commit profix'
-      subject: 'commit subject'
   pull_request:
     force: true
     labels:
