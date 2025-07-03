@@ -13,7 +13,5 @@ patterns:
         exclude:
           - README1.md
           - README3.md
-    delete_files:
-      - README4.md
     repositories:
       - michaelshih-circle/test-sync-target@main
