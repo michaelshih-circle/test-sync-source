@@ -24,9 +24,14 @@ settings:
       ### Changed Files
 
       <%_ for (const file of changes) { -%>
-      - \`<%- file.from %>\` to \`<%- file.to %>\`<% if (file.pull_request_title) { %> (from PR: [#<%- file.pull_request_number %>] <%- file.pull_request_title %>)<% } %>
+      <% if (file.deleted) { -%>
+      - :x: **Deleted**: \`<%- file.to %>\`<% if (file.pull_request_title) { %> (from PR: [#<%- file.pull_request_number %>] <%- file.pull_request_title %>)<% } %>
+      <% } else if (file.from === file.to) { -%>
+      - :file_folder: \`<%- file.to %>\`<% if (file.pull_request_title) { %> (from PR: [#<%- file.pull_request_number %>] <%- file.pull_request_title %>)<% } %>
+      <% } else { -%>
+      - :arrow_right: \`<%- file.from %>\` → \`<%- file.to %>\`<% if (file.pull_request_title) { %> (from PR: [#<%- file.pull_request_number %>] <%- file.pull_request_title %>)<% } %>
+      <% } -%>
       <%_ } -%>
-
 patterns:
   - files:
       - from: .
