@@ -13,15 +13,11 @@ settings:
 
       ---
 
-      ### All PR Titles
-
+      ### Related Pull Requests
       <%_ for (const prTitle of pull_request_titles) { -%>
       - <%- prTitle %>
       <%_ } -%>
-      <% } -%>
-          `.trim(),
 
-      ---
 patterns:
   - files:
       - from: .
