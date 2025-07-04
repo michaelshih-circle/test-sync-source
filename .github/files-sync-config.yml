@@ -3,7 +3,7 @@ settings:
     force: true
     labels:
       - 'files-sync'
-    title: 'pull request title'
+    title: 'This is custom title'
 
 patterns:
   - files:
