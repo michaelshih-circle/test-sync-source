@@ -4,19 +4,6 @@ settings:
     labels:
       - 'files-sync'
     title: 'pull request title'
-    body: |
-      This PR contains the following updates:
-
-      | :chart_with_upwards_trend: Change | :hammer_and_wrench: Synchronizing Repository | :link: Workflow |
-      | :-- | :-- | :-- |
-      | <%- changes.length %> files | [<%- repository %>](<%- github %>/<%- repository %>) | [\`<%- workflow %>#<%- run.number %>\`](<%- run.url %>) |
-
-      ---
-
-      ### Related Pull Requests
-      <%_ for (const prTitle of pull_request_titles) { -%>
-      - <%- prTitle %>
-      <%_ } -%>
 
 patterns:
   - files:
