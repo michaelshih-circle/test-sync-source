@@ -12,8 +12,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/files-sync-action
+      - uses: ./.github/workflows/repo-file-sync.yml
         with:
           github_token: ${{ secrets.SECRET_TOKEN }}
 

@@ -1,0 +1,60 @@
+name: repo-file-sync
+
+on:
+  workflow_call:
+    inputs:
+      repo-ref:
+        type: string
+        default: ${{ github.ref }}
+        required: false
+      cache_path:
+        description: "Specify the cache path you want the cache from"
+        type: string
+        required: false
+      cache_key:
+        description: "Specify the cache key"
+        type: string
+        required: false
+
+jobs:
+  file_sync:
+    runs-on: small-spot
+    env:
+      GITHUB_BOT_COMMITER_NAME: GitHub Actions
+      GITHUB_BOT_COMMITER_EMAIL: circle-github-actions@circle.com
+    steps:
+      - name: Read Github Action Bot Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2.0.7
+        with:
+          parse-json-secrets: true
+          secret-ids: |
+            /ops/utilities/github-actions-bot/gpg-priv-key
+            /ops/utilities/github-actions-bot/api-token
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.repo-ref }}
+          token: ${{ env._OPS_UTILITIES_GITHUB_ACTIONS_BOT_API_TOKEN }}
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ env._OPS_UTILITIES_GITHUB_ACTIONS_BOT_GPG_PRIV_KEY }}
+          git_committer_name: ${{ env.GITHUB_BOT_COMMITER_NAME }}
+          git_committer_email: ${{ env.GITHUB_BOT_COMMITER_EMAIL }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - name: Restore assets/artifacts from cache
+        if: ${{ inputs.cache_key != '' && inputs.cache_path != '' }}
+        uses: circlefin/github-actions-cache/restore@v1
+        id: cache
+        with:
+          path: ${{ inputs.cache_path }}
+          key: ${{ inputs.cache_key }}
+
+      - name: Run GitHub File Sync
+        uses: ./.github/actions/files-sync-action
+        with:
+          github_token: ${{ env._OPS_UTILITIES_GITHUB_ACTIONS_BOT_API_TOKEN }}
