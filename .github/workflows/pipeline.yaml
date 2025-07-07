@@ -10,9 +10,5 @@ env:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/workflows/repo-file-sync.yml
-        with:
-          github_token: ${{ secrets.SECRET_TOKEN }}
+    - uses: ./.github/workflows/repo-file-sync.yml
 
