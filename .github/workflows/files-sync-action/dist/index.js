@@ -58712,10 +58712,8 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
         owner: parsed.right[0],
         repo: parsed.right[1],
     };
-    console.log(`Debug - Getting repository info for: ${defaults.owner}/${defaults.repo}`);
     const { data: repo } = await octokit.rest.repos.get(defaults);
     const targetBranch = parsed.right[2] ?? repo.default_branch;
-    console.log(`Debug - Repository info: default_branch=${repo.default_branch}, target_branch=${targetBranch}`);
     //--- MERGE SUPPORT START ---
     const getGraphPullRequest = async (number) => {
         const { repository: { pullRequest: pr }, } = await octokit.graphql(`
@@ -58844,12 +58842,10 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
             });
         }, handleErrorReason),
         commit: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async ({ parent, branch, files, message, force }) => {
-            console.log(`Debug - Starting commit process with ${files.length} files using createTree method`);
             // Build tree entries with proper deletion format
             const treeEntries = files.map((file) => {
                 if (file.sha === null) {
                     // Delete file - According to GitHub API docs, deletions need mode and type
-                    console.log(`Debug - Delete entry: path="${file.path}", mode="${file.mode}", type="blob", sha=null`);
                     return {
                         path: file.path,
                         mode: file.mode,
@@ -58859,7 +58855,6 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 }
                 else {
                     // Add/modify file
-                    console.log(`Debug - Add/modify entry: path="${file.path}", mode="${file.mode}"`);
                     return {
                         path: file.path,
                         mode: file.mode,
@@ -58868,16 +58863,12 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                     };
                 }
             });
-            console.log(`Debug - About to create tree with ${treeEntries.length} entries`);
-            console.log(`Debug - Base tree SHA: ${parent}`);
-            console.log(`Debug - Full tree entries:`, JSON.stringify(treeEntries, null, 2));
             // Create tree
             const { data: tree } = await octokit.rest.git.createTree({
                 ...defaults,
                 base_tree: parent,
                 tree: treeEntries,
             });
-            console.log(`Debug - Successfully created tree: ${tree.sha}`);
             // Create commit
             const { data: commit } = await octokit.rest.git.createCommit({
                 ...defaults,
@@ -58885,7 +58876,6 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 message,
                 parents: [parent],
             });
-            console.log(`Debug - Successfully created commit: ${commit.sha}`);
             // Update branch reference
             await octokit.rest.git.updateRef({
                 ...defaults,
@@ -58893,7 +58883,6 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 sha: commit.sha,
                 force,
             });
-            console.log(`Debug - Successfully updated branch ${branch} to ${commit.sha}`);
             return commit;
         }, handleErrorReason),
         compareCommits: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (base, head) => {
@@ -59400,7 +59389,7 @@ const run = async () => {
                 for (const deletePattern of entry.delete_files) {
                     _actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`Processing delete pattern: ${deletePattern}`);
                     // Find matching files in the target repository
-                    const matchingFiles = allExistingFiles.right.filter(file => {
+                    const matchingFiles = allExistingFiles.right.filter((file) => {
                         // Exact match for files
                         if (file.path === deletePattern) {
                             return true;
@@ -59420,7 +59409,7 @@ const run = async () => {
                     }
                     for (const fileToDelete of matchingFiles) {
                         // Check if file is already in delete list
-                        const alreadyInDeleteList = commitFiles.some(f => 'sha' in f && f.path === fileToDelete.path && f.sha === null);
+                        const alreadyInDeleteList = commitFiles.some((f) => 'sha' in f && f.path === fileToDelete.path && f.sha === null);
                         if (!alreadyInDeleteList) {
                             _actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`Adding file to delete from delete_files: ${fileToDelete.path}`);
                             commitFiles.push({
