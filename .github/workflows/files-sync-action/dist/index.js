@@ -58677,12 +58677,15 @@ const defaultFile = {
 /* harmony export */   "n": () => (/* binding */ createGitHub),
 /* harmony export */   "z": () => (/* binding */ MergeResult)
 /* harmony export */ });
-/* harmony import */ var fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7534);
-/* harmony import */ var fp_ts_Either__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(437);
-/* harmony import */ var fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(7534);
+/* harmony import */ var fp_ts_Either__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(437);
+/* harmony import */ var fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5438);
 /* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_1__);
+
 
 
 
@@ -58692,9 +58695,9 @@ const parseRepositoryName = (name) => {
     const [fullName = '', branch] = name.split('@');
     const [owner, repo] = fullName.split('/');
     if (!owner || !repo) {
-        return fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__.left(new Error(`Repository name must be in the "owner/repo" format. ("${name}" is an invalid format)`));
+        return fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__.left(new Error(`Repository name must be in the "owner/repo" format. ("${name}" is an invalid format)`));
     }
-    return fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__.right([owner, repo, branch]);
+    return fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__.right([owner, repo, branch]);
 };
 var MergeResult;
 (function (MergeResult) {
@@ -58703,17 +58706,19 @@ var MergeResult;
     MergeResult["Prepared"] = "The pull request was set to auto-merge.";
     MergeResult["Merged"] = "The pull request was merged.";
 })(MergeResult || (MergeResult = {}));
-const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async ({ octokit, name }) => {
+const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async ({ octokit, name }) => {
     const parsed = parseRepositoryName(name);
-    if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__.isLeft(parsed)) {
+    if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__.isLeft(parsed)) {
         throw parsed.left;
     }
     const defaults = {
         owner: parsed.right[0],
         repo: parsed.right[1],
     };
+    _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Getting repository info for: ${defaults.owner}/${defaults.repo}`);
     const { data: repo } = await octokit.rest.repos.get(defaults);
     const targetBranch = parsed.right[2] ?? repo.default_branch;
+    _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Repository info: default_branch=${repo.default_branch}, target_branch=${targetBranch}`);
     //--- MERGE SUPPORT START ---
     const getGraphPullRequest = async (number) => {
         const { repository: { pullRequest: pr }, } = await octokit.graphql(`
@@ -58802,14 +58807,14 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
     return {
         owner: defaults.owner,
         name: defaults.repo,
-        createBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (name) => {
+        createBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (name) => {
             // get base branch
             const { data: base } = await octokit.rest.git.getRef({
                 ...defaults,
                 ref: `heads/${targetBranch}`,
             });
             // update exisiting branch
-            const updated = await fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatch(async () => {
+            const updated = await fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatch(async () => {
                 const { data } = await octokit.rest.git.updateRef({
                     ...defaults,
                     ref: `heads/${name}`,
@@ -58818,7 +58823,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 });
                 return data;
             }, handleErrorReason)();
-            if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__.isRight(updated)) {
+            if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__.isRight(updated)) {
                 return {
                     name,
                     sha: updated.right.object.sha,
@@ -58835,17 +58840,19 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 sha: ref.object.sha,
             };
         }, handleErrorReason),
-        deleteBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (name) => {
+        deleteBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (name) => {
             await octokit.rest.git.deleteRef({
                 ...defaults,
                 ref: `heads/${name}`,
             });
         }, handleErrorReason),
-        commit: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async ({ parent, branch, files, message, force }) => {
+        commit: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async ({ parent, branch, files, message, force }) => {
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Starting commit process with ${files.length} files using createTree method`);
             // Build tree entries with proper deletion format
             const treeEntries = files.map((file) => {
                 if (file.sha === null) {
                     // Delete file - According to GitHub API docs, deletions need mode and type
+                    _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Delete entry: path="${file.path}", mode="${file.mode}", type="blob", sha=null`);
                     return {
                         path: file.path,
                         mode: file.mode,
@@ -58855,6 +58862,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 }
                 else {
                     // Add/modify file
+                    _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Add/modify entry: path="${file.path}", mode="${file.mode}"`);
                     return {
                         path: file.path,
                         mode: file.mode,
@@ -58863,12 +58871,16 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                     };
                 }
             });
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`About to create tree with ${treeEntries.length} entries`);
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Base tree SHA: ${parent}`);
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Full tree entries: ${JSON.stringify(treeEntries, null, 2)}`);
             // Create tree
             const { data: tree } = await octokit.rest.git.createTree({
                 ...defaults,
                 base_tree: parent,
                 tree: treeEntries,
             });
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Successfully created tree: ${tree.sha}`);
             // Create commit
             const { data: commit } = await octokit.rest.git.createCommit({
                 ...defaults,
@@ -58876,6 +58888,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 message,
                 parents: [parent],
             });
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Successfully created commit: ${commit.sha}`);
             // Update branch reference
             await octokit.rest.git.updateRef({
                 ...defaults,
@@ -58883,9 +58896,10 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 sha: commit.sha,
                 force,
             });
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Successfully updated branch ${branch} to ${commit.sha}`);
             return commit;
         }, handleErrorReason),
-        compareCommits: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (base, head) => {
+        compareCommits: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (base, head) => {
             const { data: diff } = await octokit.rest.repos.compareCommits({
                 ...defaults,
                 base,
@@ -58893,7 +58907,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
             });
             return diff.files;
         }, handleErrorReason),
-        getTreeFiles: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (sha, paths) => {
+        getTreeFiles: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (sha, paths) => {
             const { data: tree } = await octokit.rest.git.getTree({
                 ...defaults,
                 tree_sha: sha,
@@ -58913,7 +58927,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
             }
             return files;
         }, handleErrorReason),
-        getFileContent: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (path) => {
+        getFileContent: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (path) => {
             try {
                 const { data } = await octokit.rest.repos.getContent({
                     ...defaults,
@@ -58934,7 +58948,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 throw error;
             }
         }, handleErrorReason),
-        findExistingPullRequestByBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (branch) => {
+        findExistingPullRequestByBranch: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (branch) => {
             const { data: prs } = await octokit.rest.pulls.list({
                 ...defaults,
                 state: 'open',
@@ -58942,14 +58956,14 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
             });
             return prs[0] ?? null;
         }, handleErrorReason),
-        closePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (number) => {
+        closePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (number) => {
             await octokit.rest.pulls.update({
                 ...defaults,
                 pull_number: number,
                 state: 'closed',
             });
         }, handleErrorReason),
-        createOrUpdatePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async ({ title, body, number, branch }) => {
+        createOrUpdatePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async ({ title, body, number, branch }) => {
             if (number !== null && number !== undefined) {
                 const { data } = await octokit.rest.pulls.update({
                     ...defaults,
@@ -58971,7 +58985,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 return data;
             }
         }, handleErrorReason),
-        mergePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async ({ number, mode, strategy, commitHeadline, commitBody }) => {
+        mergePullRequest: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async ({ number, mode, strategy, commitHeadline, commitBody }) => {
             // Get GraphQl version of PR, as REST version isn't as complete
             const gpr = await getGraphPullRequest(number);
             // Handle pre-merge checks
@@ -59004,14 +59018,14 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 return MergeResult.Merged;
             }
         }, handleErrorReason),
-        addPullRequestLabels: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (number, labels) => {
+        addPullRequestLabels: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (number, labels) => {
             await octokit.rest.issues.addLabels({
                 ...defaults,
                 issue_number: number,
                 labels,
             });
         }, handleErrorReason),
-        addPullRequestReviewers: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (number, original) => {
+        addPullRequestReviewers: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (number, original) => {
             const [reviewers, team_reviewers] = original.reduce((acc, cur) => {
                 const match = cur.match(/^team:(.+)$/);
                 if (match !== null) {
@@ -59029,7 +59043,7 @@ const createGitHubRepository = fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.try
                 team_reviewers,
             });
         }, handleErrorReason),
-        addPullRequestAssignees: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (number, assignees) => {
+        addPullRequestAssignees: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (number, assignees) => {
             await octokit.rest.issues.addAssignees({
                 ...defaults,
                 issue_number: number,
@@ -59043,12 +59057,12 @@ const createGitHub = (inputs) => {
         baseUrl: inputs.github_api_url,
     });
     return {
-        initializeRepository: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_2__.tryCatchK(async (name) => {
+        initializeRepository: fp_ts_TaskEither__WEBPACK_IMPORTED_MODULE_3__.tryCatchK(async (name) => {
             const repo = await createGitHubRepository({
                 octokit,
                 name,
             })();
-            if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_1__.isLeft(repo)) {
+            if (fp_ts_Either__WEBPACK_IMPORTED_MODULE_2__.isLeft(repo)) {
                 throw repo.left;
             }
             return repo.right;
@@ -59448,7 +59462,7 @@ const run = async () => {
             if (filesToDelete.length > 0) {
                 info('Files to delete', filesToDelete.map((f) => f.path).join(', '));
                 for (const file of filesToDelete) {
-                    _actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`Debug - File: ${file.path}, Mode: "${file.mode}", SHA: ${file.sha}`);
+                    _actions_core__WEBPACK_IMPORTED_MODULE_2__.debug(`File: ${file.path}, Mode: "${file.mode}", SHA: ${file.sha}`);
                 }
             }
             // Commit files
